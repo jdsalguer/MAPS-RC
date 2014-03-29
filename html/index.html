@@ -1,0 +1,166 @@
+<html>
+<script type="text/javascript" src="socket.min.io"></script>
+<script type="text/javascript" src="jquery-1.11.0.min.js"></script>
+<script>
+	//myip 150.156.219.32:
+	//lpid 150.156.222.229
+	var socket = io.connect('http://'+ 'localhost' +':8888') 
+	var process_active = false
+	var lock_out = false
+
+	//SOCKET.IO EVENTS
+	socket.on('echo', function(res) {
+		toTerminal(res)
+	})
+	socket.on( 'state_change', function(state) {
+		if(state == 'LOCKED') mode_elevate()
+		if(state == 'UNLOCK') mode_normal()
+	})
+	socket.on('execState', function(proc) {
+		$('div#info').empty()
+		var obj = JSON.parse(JSON.stringify(proc))
+		for(var i in obj) {
+			addToInfo(i,obj[i])
+		}
+	})
+
+	//DOM EVENTS
+	$( document ).ready(function() {
+		$('a#pulse').click( function() {
+			if(lock_out) return
+			var val = $(this).attr("value")
+			sendPulse( val )
+			toTerminalBold( val )
+		})
+		
+		$('.btn#kill').click( function() {
+			endProc();
+		})
+		
+		$('a#proc').click( function() {
+			if(lock_out) return
+			var name = $(this).attr("value")
+			startProc(name)
+			toTerminalBold('STARTING: ' + name )
+		})
+
+		$('a#script').click( function() {
+			var obj = {}
+			obj['type'] = $(this).attr("type")
+			obj['script'] = $(this).attr("script")
+			obj['args'] = $(this).attr("args")
+			startScript(obj)
+		})
+
+		$('#stdin').keyup(function(e) {
+		    if (e.keyCode == 13) {
+		       	var stdin = document.getElementById('stdin')
+		       	var val = stdin.value
+				toTerminalBold( val )
+
+		       	if(lock_out == true) 
+		       		sendToProc( val )
+		       	else
+					sendPulse( val )
+				stdin.value = ""
+		    }
+		})
+	})
+
+	//FUNCTION DEFS
+	function mode_normal() {
+		$('div#echo').removeClass('elevated')
+		$('.btn#kill').addClass('disabled')
+		$('.btn#proc').removeClass('disabled')		
+		lock_out = false
+	}
+	function mode_elevate() {
+		$('div#echo').addClass('elevated')
+		$('.btn#kill').removeClass('disabled')
+		$('.btn#proc').addClass('disabled')		
+		lock_out = true
+	}
+	function toTerminalBold(s) {
+		toTerminal('\n<strong>user@node: ' + s + '</strong>' )
+	}
+	function toTerminal(s) {
+		$('#echo').append(s+"\n")
+		term = document.getElementById('echo')
+		term.scrollTop = term.scrollHeight
+	}
+	function sendPulse(s) {
+		socket.emit('pulse', { "msg": s })
+	}
+	function sendToProc(s) {
+		socket.emit('toProc', { "command": s } )		
+	}
+	function startProc(s) {
+		if (process_active) return;
+		socket.emit('proc_start', { "proc_name": s } )
+	}
+	function endProc() {
+		socket.emit('proc_end', { "kill":"this"} )
+	}
+	function startScript(o)
+	{
+		//alert(JSON.stringify(o))
+		socket.emit('script_start', o )
+	}
+	function addToInfo(name,val) {
+	$('div#info').append('<div class="list-group">'+
+		'<a class="list-group-item">'+
+		'<h3 class="list-group-item-heading"><strong>'+name+'</strong></h3>'+
+		'<p class="list-group-item-text">'+val+'</p>'+
+		'</a></div>')
+	}
+</script>
+<title> socket.io node.js MAP </title>
+<link rel="stylesheet" type="text/css" href="bootstrap.css">
+<link rel="stylesheet" type="text/css" href="regular.css">
+
+
+<body>
+
+<div class="page-header"> <h1> socket.io <small> node.js MAP</small> <h1> </div>
+
+<div class="col-lg-2">
+<ul class="nav nav-pills nav-stacked">
+	<li><strong>Pulses</strong></li>
+	<li><a id="pulse" value="pwd" class="btn reg" > pwd </a></li>
+	<li><a id="pulse" value="ls" class="btn reg" > ls </a></li>
+	<li><a id="pulse" value="whoami" class="btn reg" > whoami </a></li>
+</ul>
+<ul class="nav nav-pills nav-stacked">
+	<!-- END OF PULSES -->
+	<li><strong>Executable</strong></li>
+	<li class="list-group-item">
+	<div class="btn-group">
+		<a id="proc" value="./program.out" class="btn program" > test.out </a>
+		<a id="kill" class="btn program disabled"><strong>X</strong></a>
+	</div>
+	<!-- python program -->
+	<div class="btn-group">
+		<a id="script" type="python" script="test.py" args="-u" class="btn program" >
+			python3 test.py -u
+		</a>
+		<a id="kill" class="btn program disabled"><strong>X</strong></a>
+	</div>	
+	</li>
+<!-- END OF PROGRAMS -->
+</ul>
+
+		
+</div>
+</div>
+<div class="col-lg-8">
+	<div id="echo" class="jumbotron terminal-stdout"></div>
+<div class="input-group">	
+	<span class="input-group-addon">stdin</span>
+	<input id="stdin" type="text" class="form-control " onkeypress="return stdin(event)">
+	<span class="input-group-addon"><a class="btn" onclick="$('#echo').empty()" > clear </a></span>
+</div>
+
+</div>
+<div class="col-lg-2">
+	<div id="info" class="panel panel-info"></div>
+</div>
