@@ -52,12 +52,37 @@ function start_app(route, handle) {
 		//////////////////////////////////////////////
 		// START PROGRAM EVENT
 		socket.on('proc_start', function(data){
-			console.log(data.proc_name)
-			proc = spawn(data.proc_name)
-			var pid = proc.pid
-			echoIO( pid )
-			toggleState()
-			processDriver(proc)
+			console.log(' . starting ' + data.proc_name)
+			try {
+				proc = spawn('apps/' + data.proc_name)
+				var pid = proc.pid
+				echoIO( pid )
+				toggleState()
+				processDriver(proc)
+			}
+			catch(e) {
+				console.log(e)
+				echoIO(' * error running executable')
+			}
+		})
+		// START SCRIPT EVENT
+		socket.on('script_start', function(script){
+			console.log(' . starting ' + script.type + " " + script.name + " " + script.args )
+			try {
+				var type = script.type
+					,name= 'apps/' + script.name
+					,args= script.args
+					,pid
+				proc = spawn(type,[name],args)
+				pid = proc.pid
+				echoIO( pid )
+				toggleState()
+				processDriver(proc)
+			}
+			catch(e) {
+				console.log(e)
+				echoIO(' * error running executable')
+			}
 		})
 		// KILL PROGRAM
 		socket.on('proc_end', function() {
@@ -75,25 +100,23 @@ function start_app(route, handle) {
 			console.log( data.command )
 			proc.stdin.setEncoding = 'utf-8'
 			proc.stdin.write( data.command + '\n' )
-			//proc.stdin.end()
+			proc.stdin.end()
 		})
 		// END PROGRAM EVENT
 
 		// PROGRAM DRIVER
 		// FORWARDING PROGRAM MESSAGES
 		function processDriver(proc) {
-
-			//proc.read(0)
 			proc.stdout.setEncoding('utf-8');
 			proc.stdout.on('data', function (data) {
-				var res = data.toString()				
-				//try {
-					echoIO(res)					
-				//	sendProcState(JSON.parse(res))
-				//}
-				//catch(e) {
-				//	echoIO("* malformed process state *")
-				//}
+				var res = data.toString()	
+				echoIO(res)				
+				try {				
+					sendProcState(JSON.parse(res))
+				}
+				catch(e) {
+					echoIO(" * malformed process state")
+				}
 			})
 			proc.stderr.on('data', function (data) {
 				console.log(data)

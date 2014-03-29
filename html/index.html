@@ -3,8 +3,8 @@
 <script type="text/javascript" src="jquery-1.11.0.min.js"></script>
 <script>
 	//myip 150.156.219.32:
-
-	var socket = io.connect('http://'+ '150.156.222.229' +':8888') 
+	//150.156.222.229
+	var socket = io.connect('http://'+ 'localhost' +':8888') 
 	var process_active = false
 	var lock_out = false
 
@@ -44,6 +44,15 @@
 			toTerminalBold('STARTING: ' + name )
 		})
 
+		$('a#script').click( function() {
+			obj = {}
+			obj['type'] = $(this).attr('type')
+			obj['name'] = $(this).attr('name')
+			obj['args'] = $(this).attr('args')
+			toTerminalBold('runing script: ' + JSON.stringify(obj) )
+			startScript(obj)
+		})
+
 		$('#stdin').keyup(function(e) {
 		    if (e.keyCode == 13) {
 		       	var stdin = document.getElementById('stdin')
@@ -62,14 +71,14 @@
 	//FUNCTION DEFS
 	function mode_normal() {
 		$('div#echo').removeClass('elevated')
-		$('.btn#kill').addClass('disabled')
-		$('.btn#proc').removeClass('disabled')		
+		$('a#kill').addClass('disabled')
+		$('a#proc,a#script').removeClass('disabled')		
 		lock_out = false
 	}
 	function mode_elevate() {
 		$('div#echo').addClass('elevated')
-		$('.btn#kill').removeClass('disabled')
-		$('.btn#proc').addClass('disabled')		
+		$('a#kill').removeClass('disabled')
+		$('a#proc,a#script').addClass('disabled')		
 		lock_out = true
 	}
 	function toTerminalBold(s) {
@@ -90,6 +99,9 @@
 		if (process_active) return;
 		socket.emit('proc_start', { "proc_name": s } )
 	}
+	function startScript(obj) {
+		socket.emit('script_start', obj )
+	}
 	function endProc() {
 		socket.emit('proc_end', { "kill":"this"} )
 	}
@@ -105,10 +117,17 @@
 <link rel="stylesheet" type="text/css" href="bootstrap.css">
 <link rel="stylesheet" type="text/css" href="regular.css">
 
-
 <body>
 
-<div class="page-header"> <h1> socket.io <small> node.js MAP</small> <h1> </div>
+<div class="page-header">
+	<h1> socket.io <small> node.js MAPS</small> </h1>
+	<span class="label label-default">R</span>
+	<span class="label label-primary">o</span>
+	<span class="label label-success">b</span>
+	<span class="label label-info">o</span>
+	<span class="label label-warning">t</span>
+	<span class="label label-danger">Controller</span>
+</div>
 
 <div class="col-lg-2">
 <ul class="nav nav-pills nav-stacked">
@@ -116,23 +135,22 @@
 	<li><a id="pulse" value="pwd" class="btn reg" > pwd </a></li>
 	<li><a id="pulse" value="ls" class="btn reg" > ls </a></li>
 	<li><a id="pulse" value="whoami" class="btn reg" > whoami </a></li>
-	<li><a id="pulse" value="python3 test.py -u" class="btn reg" > test.py </a></li>
 	<!-- END OF PULSES -->
-	<li><strong>Executable</strong></li>
+	<li><strong>Applications</strong></li>
 	<li class="list-group-item">
 	<div class="btn-group">
 		<a id="proc" value="./program.out" class="btn program" > test.out </a>
 		<a id="kill" class="btn program disabled"><strong>X</strong></a>
 	</div>
-	<!-- python program -->
+	<!-- scripts -->
 	<div class="btn-group">
-		<a id="proc" value="sudo python photocellTest.py" class="btn program" >
-			PhotoCellTest
+		<a id="script" type="python" name="test.py" args="-u" class="btn program" >
+			test.py
 		</a>
 		<a id="kill" class="btn program disabled"><strong>X</strong></a>
 	</div>	
 	</li>
-<!-- END OF PROGRAMS -->
+	<!-- END OF PROGRAMS -->
 </ul>
 
 		
@@ -140,9 +158,17 @@
 </div>
 <div class="col-lg-8">
 	<div id="echo" class="jumbotron terminal-stdout"></div>
-	<input id="stdin" type="text" placeholder="user@node: " class="form-control terminal-stdin" onkeypress="return stdin(event)">
-	<button class="btn reg" onclick="$('#echo').empty()" > clear </button>
+
+<div class="input-group">
+	<span class="input-group-addon">stdin</span>
+	<input id="stdin" type="text" class="form-control terminal-stdin" onkeypress="return stdin(event)">
+	<span class="input-group-btn">
+		<button class="btn" onclick="$('#echo').empty()" > clear </button>
+	</span>
+</div>
+
 </div>
 <div class="col-lg-2">
 	<div id="info" class="panel panel-info"></div>
 </div>
+</body>
