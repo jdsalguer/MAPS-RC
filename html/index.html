@@ -3,8 +3,8 @@
 <script type="text/javascript" src="jquery-1.11.0.min.js"></script>
 <script>
 	//myip 150.156.219.32:
-	//lpid 150.156.222.229
-	var socket = io.connect('http://'+ 'localhost' +':8888') 
+
+	var socket = io.connect('http://'+ '150.156.222.229' +':8888') 
 	var process_active = false
 	var lock_out = false
 
@@ -42,14 +42,6 @@
 			var name = $(this).attr("value")
 			startProc(name)
 			toTerminalBold('STARTING: ' + name )
-		})
-
-		$('a#script').click( function() {
-			var obj = {}
-			obj['type'] = $(this).attr("type")
-			obj['script'] = $(this).attr("script")
-			obj['args'] = $(this).attr("args")
-			startScript(obj)
 		})
 
 		$('#stdin').keyup(function(e) {
@@ -101,11 +93,6 @@
 	function endProc() {
 		socket.emit('proc_end', { "kill":"this"} )
 	}
-	function startScript(o)
-	{
-		//alert(JSON.stringify(o))
-		socket.emit('script_start', o )
-	}
 	function addToInfo(name,val) {
 	$('div#info').append('<div class="list-group">'+
 		'<a class="list-group-item">'+
@@ -129,8 +116,7 @@
 	<li><a id="pulse" value="pwd" class="btn reg" > pwd </a></li>
 	<li><a id="pulse" value="ls" class="btn reg" > ls </a></li>
 	<li><a id="pulse" value="whoami" class="btn reg" > whoami </a></li>
-</ul>
-<ul class="nav nav-pills nav-stacked">
+	<li><a id="pulse" value="python3 test.py -u" class="btn reg" > test.py </a></li>
 	<!-- END OF PULSES -->
 	<li><strong>Executable</strong></li>
 	<li class="list-group-item">
@@ -140,8 +126,8 @@
 	</div>
 	<!-- python program -->
 	<div class="btn-group">
-		<a id="script" type="python" script="test.py" args="-u" class="btn program" >
-			python3 test.py -u
+		<a id="proc" value="sudo python photocellTest.py" class="btn program" >
+			PhotoCellTest
 		</a>
 		<a id="kill" class="btn program disabled"><strong>X</strong></a>
 	</div>	
@@ -154,12 +140,8 @@
 </div>
 <div class="col-lg-8">
 	<div id="echo" class="jumbotron terminal-stdout"></div>
-<div class="input-group">	
-	<span class="input-group-addon">stdin</span>
-	<input id="stdin" type="text" class="form-control " onkeypress="return stdin(event)">
-	<span class="input-group-addon"><a class="btn" onclick="$('#echo').empty()" > clear </a></span>
-</div>
-
+	<input id="stdin" type="text" placeholder="user@node: " class="form-control terminal-stdin" onkeypress="return stdin(event)">
+	<button class="btn reg" onclick="$('#echo').empty()" > clear </button>
 </div>
 <div class="col-lg-2">
 	<div id="info" class="panel panel-info"></div>

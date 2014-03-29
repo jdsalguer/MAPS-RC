@@ -11,7 +11,7 @@ var   app
 
 function start_app(route, handle) {
 	app = require('http').createServer(onRequest).listen(process.env.PORT || 8888)
-	io = require('socket.io').listen(app, { log: false }).set('log level', 1)
+	io = require('socket.io').listen(app/*, { log: false }*/)/*.set('log level', 1)*/
 
 	console.log(" . ONLINE ]-[ http://localhost:8888 .")
 
@@ -52,14 +52,8 @@ function start_app(route, handle) {
 		//////////////////////////////////////////////
 		// START PROGRAM EVENT
 		socket.on('proc_start', function(data){
+			console.log(data.proc_name)
 			proc = spawn(data.proc_name)
-			var pid = proc.pid
-			echoIO( pid )
-			toggleState()
-			processDriver(proc)
-		})
-		socket.on('script_start', function(scr){
-			proc = spawn(scr.type,[scr.script],scr.args)
 			var pid = proc.pid
 			echoIO( pid )
 			toggleState()
@@ -90,11 +84,10 @@ function start_app(route, handle) {
 		function processDriver(proc) {
 
 			//proc.read(0)
-			//proc.stdout.setEncoding('utf-8');
+			proc.stdout.setEncoding('utf-8');
 			proc.stdout.on('data', function (data) {
 				var res = data.toString()				
 				//try {
-					console.log(res + '\nRAW - ' + data )
 					echoIO(res)					
 				//	sendProcState(JSON.parse(res))
 				//}
@@ -102,13 +95,8 @@ function start_app(route, handle) {
 				//	echoIO("* malformed process state *")
 				//}
 			})
-			proc.on('data', function(data) {
-				console.log('READABLE \n\n\n +++++++++++++++++')
-				echoIO("READABLE DATA")
-				echoIO(data)
-			})
 			proc.stderr.on('data', function (data) {
-				console.log('stderr - ' + data)
+				console.log(data)
 				var res = data.toString()
 				echoIO(res)
 			})
