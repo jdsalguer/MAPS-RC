@@ -100,7 +100,7 @@ function start_app(route, handle) {
 			console.log( data.command )
 			proc.stdin.setEncoding = 'utf-8'
 			proc.stdin.write( data.command + '\n' )
-			proc.stdin.end()
+			//proc.stdin.end()
 		})
 		// END PROGRAM EVENT
 
