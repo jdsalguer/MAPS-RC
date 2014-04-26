@@ -2,8 +2,7 @@
 <script type="text/javascript" src="socket.min.io"></script>
 <script type="text/javascript" src="jquery-1.11.0.min.js"></script>
 <script>
-
-	var socket = io.connect('http://'+ '150.156.222.229' +':8888') 
+	var socket = io.connect() 
 	var process_active = false
 	var lock_out = false
 
@@ -16,26 +15,15 @@
 		if(state == 'UNLOCK') mode_normal()
 	})
 	socket.on('execState', function(proc) {
-		//$('div#info').empty()
+		$('div#info').empty()
 		var obj = JSON.parse(JSON.stringify(proc))
 		for(var i in obj) {
-			//addToInfo(i,obj[i])
-			//$("#"+i).html(obj)
-			var elem = "p#" + i.toString().replace(" ","")
-			$(elem).text(obj[i])
-			//alert( elem )
-			//$('#lesther').append('lalalalalala')
+			addToInfo(i,obj[i])
 		}
 	})
 
 	//DOM EVENTS
 	$( document ).ready(function() {
-		$('a#quick').click(function() {
-			sendToProc( $(this).attr("value") )
-			//alert($(this).attr("value"))
-		})
-
-
 		$('a#pulse').click( function() {
 			if(lock_out) return
 			var val = $(this).attr("value")
@@ -92,10 +80,10 @@
 		lock_out = true
 	}
 	function toTerminalBold(s) {
-		toTerminal('<strong>stdout: ' + s + '</strong>\n' )
+		toTerminal('\n<strong>user@node: ' + s + '</strong>' )
 	}
 	function toTerminal(s) {
-		$('#echo').append(s+"")
+		$('#echo').append(s+"\n")
 		term = document.getElementById('echo')
 		term.scrollTop = term.scrollHeight
 	}
@@ -122,16 +110,15 @@
 		'<p class="list-group-item-text">'+val+'</p>'+
 		'</a></div>')
 	}
-
 </script>
-<title> RES Bot </title>
+<title> socket.io node.js MAP </title>
 <link rel="stylesheet" type="text/css" href="bootstrap.css">
-<link rel="stylesheet" type="text/css" href="res.css">
+<link rel="stylesheet" type="text/css" href="regular.css">
 
 <body>
 
 <div class="page-header">
-	<h1> Robots <small> for </small> Emergency Situations </h1>
+	<h1> socket.io <small> node.js MAPS</small> </h1>
 	<span class="label label-default">R</span>
 	<span class="label label-primary">o</span>
 	<span class="label label-success">b</span>
@@ -140,72 +127,15 @@
 	<span class="label label-danger">Controller</span>
 </div>
 
-
-
-<div class="panel panel-default">
-	<div class="panel-heading">
-		<h3 class="text panel-title">Alerts</h3>
- 	</div>
-	<div class="panel-body">
-	  	<div class="alert alert-info">
-			<p class="text">Its Uber Hot up in here</p>
-		</div> 
-		<div class="alert alert-danger">
-			<p class="text">seriously!!</p>
-		</div> 
-		<div class="alert alert-warning">
-			<p class="text">Okay be careful</p>
-		</div> 
-	</div>
-</div>
-
-<div class="panel panel-default">
-	<div class="panel-heading">
-		<h3 class="text panel-title">Status</h3>
- 	</div>
-	<div class="panel-body">
-		Temperature:
-	  	<div class="alert alert-success">
-			<p>Fahrenheit/Celsius</p>
-		</div> 
-		Visibility:
-		<div class="alert alert-success">
-			<p>High/Low</p>
-		</div> 
-		Obstruction Distance:
-		<div class="alert alert-success">
-			<p>Centimenters</p>
-		</div> 
-		Life Detected:
-		<div class="alert alert-success">
-			<p>Yes/No</p>
-		</div>
-	</div>
-</div>
-
-<p><span class="glyphicon glyphicon-arrow-up"></span></p>
-
-<div class="col-md-2">
+<div class="col-lg-2">
 <ul class="nav nav-pills nav-stacked">
 	<li><strong>Pulses</strong></li>
 	<li><a id="pulse" value="pwd" class="btn reg" > pwd </a></li>
 	<li><a id="pulse" value="ls" class="btn reg" > ls </a></li>
 	<li><a id="pulse" value="whoami" class="btn reg" > whoami </a></li>
 	<!-- END OF PULSES -->
-
 	<li><strong>Applications</strong></li>
 	<li class="list-group-item">
-
-        <div class="btn-group">
-                <a id="script" type="python" name="photocellTest.py" args="-u" class="btn program" >
-                       photocellTest.py
-                </a>
-                <a id="kill" class="btn program disabled"><strong>X</strong></a>
-        </div>
-
-
-
-
 	<div class="btn-group">
 		<a id="proc" value="./program.out" class="btn program" > test.out </a>
 		<a id="kill" class="btn program disabled"><strong>X</strong></a>
@@ -216,20 +146,9 @@
 			test.py
 		</a>
 		<a id="kill" class="btn program disabled"><strong>X</strong></a>
-	</div>
-	<div class="btn-group">
-		<a id="script" type="python3" name="non_blocking.py" args="-u" class="btn program" >
-			non_blocking_driver.py3
-		</a>
-		<a id="kill" class="btn program disabled"><strong>X</strong></a>
 	</div>	
 	</li>
 	<!-- END OF PROGRAMS -->
-	<li class="list-group-item">
-		<a id="quick" value="turn-right" > turn right </a>
-<a id="quick" value="stop-right" > stop right </a>	
-		<a id="quick" value="have-food" > food </a>
-	</li>
 </ul>
 
 		
@@ -238,36 +157,16 @@
 <div class="col-lg-8">
 	<div id="echo" class="jumbotron terminal-stdout"></div>
 
-	<div class="input-group">
-		<span class="input-group-addon">stdin</span>
-		<input id="stdin" type="text" class="form-control terminal-stdin" onkeypress="return stdin(event)">
-		<span class="input-group-btn">
-			<button class="btn" onclick="$('#echo').empty()" > clear </button>
-		</span>
-	</div>
+<div class="input-group">
+	<span class="input-group-addon">stdin</span>
+	<input id="stdin" type="text" class="form-control terminal-stdin" onkeypress="return stdin(event)">
+	<span class="input-group-btn">
+		<button class="btn" onclick="$('#echo').empty()" > clear </button>
+	</span>
 </div>
 
-
+</div>
 <div class="col-lg-2">
-	<div id="info" class="panel panel-info">
-<div id="info" class="panel panel-info">
-<div class="list-group">
-	<a class="list-group-item">
-		<h3 class="list-group-item-heading">
-			<strong> lews </strong>
-		</h3>
-	<p class="list-group-item-text" id="lesther">  </p>
-	</a>
-</div>
-<div class="list-group">
-	<a class="list-group-item">
-		<h3 class="list-group-item-heading">
-			<strong> handling </strong>
-		</h3>
-	<p class="list-group-item-text" id="handling">  </p>
-	</a>
-</div>
-</div>
-	</div>
+	<div id="info" class="panel panel-info"></div>
 </div>
 </body>

@@ -3,8 +3,6 @@
 <script type="text/javascript" src="jquery-1.11.0.min.js"></script>
 <script type="text/javascript" src="jquery-ui-1.10.4.custom.js"></script>
 <script type="text/javascript" src="webkitdragdrop.js"></script>
-<!--<link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/themes/smoothness/jquery-ui.css" />
-<script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js"></script> -->
 <link rel="stylesheet" type="text/css" href="bootstrap.css">
 <link rel="stylesheet" type="text/css" href="regular.css">
 <meta name="viewport" content="width=device-width, initial-scale=0.5, user-scalable=0">
@@ -23,13 +21,12 @@ $(document).ready(function(){
 			$('#movement').draggable( {disabled: true} );
 		
 	})
-
 	var y_off = 150, x_off = 150
 	$('#movement').css({'top':y_off,'left':x_off})
 	var mleft= $('#movement').offset().left
 	var mtop = $('#movement').offset().top
 
-
+	// FOR MOBILE
 	if( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ) {
 		$('#media-type').text('Tablet')
 		var movement = new webkit_draggable('movement',{scroll:false,revert:true,
@@ -39,13 +36,11 @@ $(document).ready(function(){
 				killUpdate = true
 			}
 		});
-
 		function updateCoordinates() {
 			if(killUpdate) {
 				killUpdate = false
 				return
 			}
-
 			var offset_l = $('#movement').offset().left
 			var offset_t = $('#movement').offset().top 
 
@@ -53,10 +48,9 @@ $(document).ready(function(){
 			$("y").text( mtop - offset_t.top + y_off )
 			setTimeout( updateCoordinates(),200)
 		}
-
-
 	}
 	else
+	// FOR PC
 	{
 		$('#media-type').text('Desktop')
 		$( "#movement" ).draggable({ containment: "parent", grid: [130,120], disabled:true,helper:"clone",
@@ -66,13 +60,9 @@ $(document).ready(function(){
 			drag: function(ev,ui){
 			var x = -1 * (mleft - ui.offset.left )
 			var y = (mtop - ui.offset.top )
-			//$("x").text( x )
-	      	//$("y").text( y )
 	      	sendDirection(findDirection(x,y))
 		},
 			revert: function() {
-			//$("x").text( 0 )
-	      	//$("y").text( 0 )
 	      	setTimeout(sendDirection(findDirection(0,0)), 300)
 			return true
 		},
@@ -81,7 +71,6 @@ $(document).ready(function(){
 			}
 		});
 	}
-
 	function sendDirection(s) {
 		$('#dir-text').text(s)
 	}
