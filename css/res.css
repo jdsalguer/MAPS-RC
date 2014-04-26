@@ -1,0 +1,76 @@
+h1, h2, h3, h4, .page-header {
+	margin: 0px;
+}
+.text{
+	text-align:center;
+
+}
+.alerts {
+	width:220px;
+	padding:10px;
+	border:1px solid gray;
+	margin:0px;
+
+
+}
+.panel{
+	float:left;
+	margin:auto;
+	width:50%;
+	overflow:auto;
+
+}
+.page-header {
+	margin:auto;
+	width:70%;
+	text-align:center;
+}
+.reg
+{
+	border: 1px solid #333;
+}
+.reg, .terminal-stdin, .terminal-stdout
+{
+	padding: 0px;
+	text-align: left;
+	font-family: "Courier New", Courier, monospace;
+}
+.program
+{
+	background-color: #e1e8ed;
+	color: #66757f;
+	border: 1px solid #66757f;
+}
+.elevated
+{
+	background-color: #e1e8ed !important;
+	color: #00007f !important;
+	border: 1px solid #66757f;
+}
+button.btn.reg
+{
+	padding: 12px;
+}
+.terminal-stdout
+{
+	height:420px;
+	overflow-y:scroll; 
+	background-color: #333;
+	color:#AAA;
+	font-size: 1.0em;
+	white-space: pre;
+	line-height: 1.1em;
+	padding: 5px;
+	margin: 0px;
+	border-radius: 0px;
+}
+.terminal-stdin
+{
+	width: 100%;
+	background-color: #000;
+	color:#FFF;
+	padding: 5px;
+	margin: 0px;
+	border-radius: 0px;
+}
+.terminal-stdin strong { color: #0080ff;}
