@@ -1,0 +1,171 @@
+<html>
+<script type="text/javascript" src="socket.min.io"></script>
+<script type="text/javascript" src="jquery-1.11.0.min.js"></script>
+<script type="text/javascript" src="jquery-ui-1.10.4.custom.js"></script>
+<script type="text/javascript" src="webkitdragdrop.js"></script>
+<link rel="stylesheet" type="text/css" href="bootstrap.css">
+<link rel="stylesheet" type="text/css" href="regular.css">
+<meta name="viewport" content="width=device-width, initial-scale=0.5, user-scalable=0">
+<script>
+//	var   dirX 
+//		, dirY
+var killUpdate = false
+$(document).ready(function(){
+	$('.remote-power-toggle#on').hide()
+	$('.remote-power-toggle').click(function(){
+		$(this).hide().siblings().show()
+
+		if($(this).attr('id')=="off") 
+			$('#movement').draggable( {disabled: false} );
+		else
+			$('#movement').draggable( {disabled: true} );
+		
+	})
+	var y_off = 150, x_off = 150
+	$('#movement').css({'top':y_off,'left':x_off})
+	var mleft= $('#movement').offset().left
+	var mtop = $('#movement').offset().top
+
+	// FOR MOBILE
+	if( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ) {
+		$('#media-type').text('Tablet')
+		var movement = new webkit_draggable('movement',{scroll:false,revert:true,
+			onStart: function(){
+		},
+			onEnd: function(){
+				killUpdate = true
+			}
+		});
+		function updateCoordinates() {
+			if(killUpdate) {
+				killUpdate = false
+				return
+			}
+			var offset_l = $('#movement').offset().left
+			var offset_t = $('#movement').offset().top 
+
+			$("x").text( -1 *(mleft - offset_l.left + x_off) )
+			$("y").text( mtop - offset_t.top + y_off )
+			setTimeout( updateCoordinates(),200)
+		}
+	}
+	else
+	// FOR PC
+	{
+		$('#media-type').text('Desktop')
+		$( "#movement" ).draggable({ containment: "parent", grid: [130,120], disabled:true,helper:"clone",
+			start: function(ev,ui) {
+			$(this).hide()
+		},
+			drag: function(ev,ui){
+			var x = -1 * (mleft - ui.offset.left )
+			var y = (mtop - ui.offset.top )
+	      	sendDirection(findDirection(x,y))
+		},
+			revert: function() {
+	      	setTimeout(sendDirection(findDirection(0,0)), 300)
+			return true
+		},
+			stop: function(){
+				$(this).show()
+			}
+		});
+	}
+	function sendDirection(s) {
+		$('#dir-text').text(s)
+	}
+
+})
+
+function findDirection(x,y) {
+
+	return x + ',' + y
+}
+
+
+</script>
+
+<body>
+
+<nav class="navbar navbar-default" role="navigation">
+	<div class="container-fluid">
+	<ul class="nav navbar-nav">
+	<li>	<a class="navbar-brand" href="#">RES</a>  </li>	
+	<li id="media-type" class="navbar-brand  navbar-right"> </li> 
+	</ul>
+	</div>
+</nav>
+
+<section id="information">
+<div class="col-sm-5" id="information">
+
+	<div class="info-group">
+		<div class="container info-panel">
+			<div class="col-sm-12 info-title">
+				<strong>Temperature</strong>
+			</div>
+			<div class="col-sm-12">
+				<div class="progress">
+				  <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width: 40%"></div>
+				</div>
+			</div>
+			<div class="col-sm-12 info-body">
+				<div class="data">180&deg;c</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="info-group info-half">
+		<div class="container info-panel">
+			<div class="col-sm-12 info-title">
+				<strong>Visibility</strong>
+			</div>
+			<div class="col-sm-12 info-body">
+				<div class="data">Great</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="info-group info-half">
+		<div class="container info-panel">
+			<div class="col-sm-12 info-title">
+				<strong>Other</strong>
+			</div>
+			<div class="col-sm-12 info-body">
+				<div class="data">thing</div>
+			</div>
+		</div>
+	</div>
+
+</div>
+</section>
+
+<section id="remote-control">
+<div class="col-sm-7" id="remote-control">
+
+	<div class="remote-group">
+		<div class="col-sm-2">
+
+			<div class="remote-power-toggle" id="off">
+				<img style="height:100px" class="" src="../offbutton.png" id="off">
+			</div>
+			<div class="remote-power-toggle" id="on">
+				<img style="height:100px" class="" src="../onbutton.png" id="on">
+			</div>
+		</div>
+		<div class="col-sm-2" id="dir-text">
+
+		</div>
+		<div class="col-sm-12 direction pull-right">
+			<div id="movement" class="ui-widget-content thumb-pad">
+
+			</div>
+		</div>
+
+	</div>
+
+</div>
+</section>
+
+</body>
+</html>

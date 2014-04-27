@@ -9,23 +9,13 @@ import select
 import time
 import threading
 import queue
-import motorControl as mC
 
 instream = [sys.stdin]
 # the timeout for maybe set to 0
 # its a precausion for race conditions against the hardware
 # example: data doesn't come in at the right time on the UART
-timeout  = 0.09
+timeout  = 0.01
 baud_rate = 0.04
-
-LL = 16#11
-LH = 18#13
-RL = 11#16
-RH = 13#18
-
-mC.motorPins(LL, LH, RL, RH)
-mC.motorSetup()
-
 cmdQueue        = queue.Queue()
 last_interrupt  = time.time()
 
@@ -47,12 +37,6 @@ def jread():
 def handler(s):
   global last_interrupt
   jprint('handling',s)
-  if(s == "have-food"):
-    jprint('lesther','gets_tubby')
-  if( s == 'turn-right'):
-    jprint('turning','right')
-    mC.rightForward()
-
   last_interrupt = time.time()
 
 def MAIN_LOOP():
@@ -60,7 +44,7 @@ def MAIN_LOOP():
   now = time.time()
   if now - last_interrupt > baud_rate:
     ### all the main stuff
-    #jprint('msg','running smooth')
+    jprint('msg','running smooth')
     last_interrupt = now
 
 
