@@ -11,7 +11,7 @@ var   app
 
 function start_app(route, handle) {
 	app = require('http').createServer(onRequest).listen(process.env.PORT || 8888)
-	io = require('socket.io').listen(app/*, { log: false }*/)/*.set('log level', 1)*/
+	io = require('socket.io').listen(app, { log: false }).set('log level', 1)
 
 	console.log(" . ONLINE ]-[ http://localhost:8888 .")
 
@@ -31,7 +31,10 @@ function start_app(route, handle) {
 		// START DICONNECT EVENT
 		socket.on('disconnect',function() {
   			connection = 0
-			if(proc != undefined)			
+			//proc.stdin.setEncoding = 'utf-8'
+			//proc.stdin.write( "die" + "\n")
+			exec("python3 reset.py")
+			//if(proc != undefined)			
 				proc.kill("SIGKILL")
 		})
 		// END DISCONNECT EVENT
@@ -39,14 +42,14 @@ function start_app(route, handle) {
 		//////////////////////////////////////////////
 		// START PULSE EVENTs
 		// pulses are for programs that don't need input
-		socket.on('pulse', function(data){
-			if(process_state) return
-			child = exec(data.msg, function (err , stdout, stderr) {
-				echoIO(stdout)
-				if(stderr.length > 1) echoIO(stderr)
-				if ( err ) console.log(' . sys err ' + stderr)
-			})
-		})
+		//socket.on('pulse', function(data){
+		//	if(process_state) return
+		//	child = exec(data.msg, function (err , stdout, stderr) {
+		//		echoIO(stdout)
+		//		if(stderr.length > 1) echoIO(stderr)
+		//		if ( err ) console.log(' . sys err ' + stderr)
+		//	})
+		//})
 		// END PULSE EVENT
 		
 		//////////////////////////////////////////////
@@ -87,7 +90,10 @@ function start_app(route, handle) {
 		// KILL PROGRAM
 		socket.on('proc_end', function() {
 			try {
-				proc.kill("SIGKILL")				
+				//proc.kill("SIGKILL")
+				//proc.stdin.setEncoding = 'utf-8'
+				proc.stdin.write( "die" + '\n' )
+				proc.stdin.end()			
 			}
 			catch(e)
 			{
@@ -97,10 +103,11 @@ function start_app(route, handle) {
 		})
 		// get message and forward to process
 		socket.on('toProc', function(data) {
-			console.log( data.command )
+			console.log( " . sending: " + data.command )
+			//var datum = data.command.replace(" ", "")
 			proc.stdin.setEncoding = 'utf-8'
-			proc.stdin.write( data.command + '\n' )
-			proc.stdin.end()
+			proc.stdin.write( data.command + "\n")
+			//proc.stdin.end()
 		})
 		// END PROGRAM EVENT
 
@@ -110,7 +117,8 @@ function start_app(route, handle) {
 			proc.stdout.setEncoding('utf-8');
 			proc.stdout.on('data', function (data) {
 				var res = data.toString()	
-				echoIO(res)				
+				//echoIO(res)
+				//console.log( " . STDOUT " + res )			
 				try {				
 					sendProcState(JSON.parse(res))
 				}
@@ -119,13 +127,13 @@ function start_app(route, handle) {
 				}
 			})
 			proc.stderr.on('data', function (data) {
-				console.log(data)
+				console.log( " . ERR " + data)
 				var res = data.toString()
 				echoIO(res)
 			})
 
 			proc.on('exit', function (code) {
-				console.log(code)
+				console.log( " . EXIT " +  code)
 				stateOff()
 				echoIO("exit " + code)
 				sendProcState(JSON.parse('{"status":"not_running"}'))

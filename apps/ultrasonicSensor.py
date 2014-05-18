@@ -38,4 +38,3 @@ def distance():
 
 	return distance
 
-

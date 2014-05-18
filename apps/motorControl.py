@@ -43,6 +43,14 @@ def rotateLeft():
 	#Reverses the left wheel and forwards the right to turn left 
 	leftReverse()
 	rightForward()
+def reverseLeft():
+	#Stops the left wheel and reverse the right to reverse left
+	rightReverse()
+	leftoff()
+def reverseRight():
+	#Stops the right wheel and reverse the left to reverse left
+	leftReverse()
+	rightoff()
 def forward():
 	#Turns both left and right wheel forward
 	leftForward()
@@ -66,13 +74,13 @@ def rightReverse():
 	GPIO.output(RH, 0)
 	
 def off():
-   	GPIO.output(LL, 0)
+	GPIO.output(LL, 0)
 	GPIO.output(LH, 0)
-   	GPIO.output(RL, 0)
+	GPIO.output(RL, 0)
 	GPIO.output(RH, 0)
 def leftoff():
-   	GPIO.output(LL, 0)
+	GPIO.output(LL, 0)
 	GPIO.output(LH, 0)
 def rightoff():
-   	GPIO.output(RL, 0)
+	GPIO.output(RL, 0)
 	GPIO.output(RH, 0)

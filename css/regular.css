@@ -65,7 +65,7 @@ div.data
 {
 	display: block;
 	position: relative;
-	font-size: 4.0em;
+	font-size: 3.3em;
 	height: 1.0em;
 	line-height: 0.8em;
 	text-shadow: 1px 1px RGBA(0,0,0,0.4);
@@ -118,6 +118,25 @@ div.data
 	cursor: pointer;
 	position: absolute;
 }
+#status
+{
+	font-weight: 500;
+	font-size: 1.4em;
+	color:#333;
+}
+
+.leds-group
+{
+
+}
+.active-light
+{
+	border: solid 3px red;
+}
+
+
+
+
 #dir-text
 {
 	color: white;

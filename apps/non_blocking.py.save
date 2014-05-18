@@ -176,12 +176,12 @@ def get_photo():
       jprint("photo", new_light )
       last_light = new_light
 
-      #'''if light is low turn light on'''
-     # if new_light == 'Low':
-     #   lM.whiteON()
-     # '''if light is high turn light off'''
-     # if new_light == 'High':
-     #   lM.whiteOFF()
+      '''if light is low turn light on'''
+      if new_light == 'Low':
+        lM.whiteON()
+      '''if light is high turn light off'''
+      if new_light == 'High':
+        lM.whiteOFF()
 
 
 photo_thread = threading.Thread(target=get_photo)
@@ -201,13 +201,6 @@ def flashgreen():
       time.sleep(.1)
 
 lifealert_thread = threading.Thread(target=flashgreen)
-
-#####################################
-# LONG POLL THREAD FOR mapping
-#def mapplace():
- # mb.Map()
-
-#mapper_thread = threading.Thread(target=mapplace)
 
 
 
@@ -231,35 +224,26 @@ def handler(s):
 
 
   if( s == "S" ):
-    lM.brakesON()
     mstop()
   elif( s == "F" ):
     jprint("__DIR__","forward")
-    lM.brakesOFF()
     mforward()
-  elif( s == "B" ):
-    lM.brakesOFF()      
+  elif( s == "B" ):      
     mbackward()
   elif( s == "FR" ):
-    lM.brakesOFF()
     mturnright()
   elif( s == "FL" ):
-    lM.brakesOFF()
     mturnleft()
   elif( s == "BR" ):
-    lM.brakesOFF()
     mbackright()
   elif( s == "BL" ):
-    lM.brakesOFF()
     mbackleft()
 
-  if( s == "light_on" ):
-    lM.whiteON()
-  if( s == "light_off" ):
+  if( s == "light_on"):
+    lM.whiteOn()
+  if( s == "light_off"):
     lM.whiteOFF()
-  if( s == "map_area" ):
-    #mapper_thread.start()
-    mb.Map() 
+    
   #####################################
   #LED button testing
   #####################################
@@ -296,7 +280,13 @@ def handler(s):
     #lM.whiteOFF()
     jprint("leds-group",s)
  
-
+  if( s == "map_area" ):
+Map()
+    
+    jprint("leds-group",s)
+  if( s == "map_0" ):
+    once = 0
+    jprint("leds-group",s)
 
   last_s = s
 
@@ -340,10 +330,19 @@ def MAIN_LOOP():
 
 
     #if motion detected flash green and get distance
-    if ( not mS.PIRReading()):
-     living = "Found " + str(uS.distance()) + "away"
-     jprint("life", living) 
-     lifealert_thread.start()
+#    if mS.PIRReading():
+#     living = "Found " + str(uS.Distance()) + "away"
+#     jprint("life", living) 
+#     lifealert_thread.start()
+	
+
+    #when car is stopped turn on rear lights
+    if ( (mC.LL == 0 and mC.LH == 0) or (mC.LL == 1 and mC.LH == 1) and \
+    	(mC.RL == 0 and mC.RH == 0) or (mC.RL == 1 and mC.RH == 1) ):  
+        lM.brakesON
+    elif ( (mC.LL == 1 and mC.LH == 0) or (mC.LL == 0 and mC.LH == 1) and \
+    	(mC.RL == 1 and mC.RH == 0) or (mC.RL == 0 and mC.RH == 1) ):
+      lM.brakesOFF()
 
     ######################
     last_interrupt = now

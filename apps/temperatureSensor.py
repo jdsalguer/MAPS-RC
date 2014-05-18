@@ -17,13 +17,13 @@ def tempReading():
 	
 	while filelines[0].strip()[-3:] != 'YES': 
 		time.sleep(0.5)	
-		print 'in the loop'		
+#		print 'in the loop'		
 		tempReading()			
 	
 	equalsign = filelines[1].find('t=')
 	if equalsign == -1:
 		time.sleep(0.5)
-		print 'in the if'
+#		print 'in the if'
 		tempReading()
 	tempstring = filelines[1][equalsign+2:]
 	return tempstring

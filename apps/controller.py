@@ -61,11 +61,6 @@ def brakeLightsOFF():
 #TESTING PURPOSES#
 ###########################################################################
 
-'''
-print 'testing motors'
-mC.reverse()
-time.sleep(2)
-mC.off()
 
 print 'testing brake lights'
 for i in range(5):	
@@ -85,6 +80,15 @@ print 'testing the color green'
 for i in range(5):	
 	flashGreen()
 
+
+
+'''
+print 'testing motors'
+mC.reverse()
+time.sleep(2)
+mC.off()
+
+
 print 'testing the ultrasonic sensor'
 for i in range(5):
 	print  round(getDistance(), 2), 'cm'
@@ -101,15 +105,14 @@ for i in range(5):
 			lightOFF()
 	time.sleep(2)
 
-'''
+
 print 'testing the temperature'
 for i in range(5):
 	print 'Fahrenheit: ', tS.tempF(), ' Celcius: ', tS.tempC()
 
 
-
+'''
 GPIO.cleanup()
-
 ######################################################################
 #
 ######################################################################
@@ -144,7 +147,7 @@ try:
 			if (mC.LL == 0 & mC.LH == 0) || (mC.LL == 1 & mC.LH == 1) \
 		   	   (mC.RL == 0 & mC.RH == 0) || (mC.RL == 1 & mC.RH == 1):	
 				brakeLightsON()
-		else if (mC.LL == 1 & mC.LH == 0) || (mC.LL == 0 & mC.LH == 1) \
+		elif (mC.LL == 1 & mC.LH == 0) || (mC.LL == 0 & mC.LH == 1) \
 		   	(mC.RL == 1 & mC.RH == 0) || (mC.RL == 0 & mC.RH == 1):
 				brakeLightsOFF()
 

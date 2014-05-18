@@ -9,7 +9,7 @@ def PIRSetup(pirPin):
 	GPIO.setup(PIR, GPIO.IN)
 	
 def PIRReading():
-	if GPIO.input(PIR) == 1:
+	if GPIO.input(PIR):
 		return True
 	return False
 	

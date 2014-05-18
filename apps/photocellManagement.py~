@@ -30,14 +30,13 @@ GPIO.setmode(GPIO.BOARD)
 count = 0 
 
 def photoresistorSetup(lightSensor):
-    global PR 
-    PR = lightSensor
+	global PR 
+	PR = lightSensor
 	
 def photoresistorReading():
     value = 0
     GPIO.setup(PR, GPIO.OUT)
     GPIO.output(PR, GPIO.LOW)
-
  
     GPIO.setup(PR, GPIO.IN)
     while (GPIO.input(PR) == GPIO.LOW):
@@ -47,34 +46,29 @@ def photoresistorReading():
 
 
 def runningSum(avg,new):
-    global count
-    count+=1
-    avg-=avg/count
-    avg+=new/count
+        global count
+        count+=1
+        avg-=avg/count
+        avg+=new/count
 
-    return avg
-
-def average():
-
-    global count        
-    count = 0
-    average = 0
-    j = 0
-
-    for j in range(100):
-        new = photoresistorReading()
-        average = runningSum(average,new)
-   # print average
-    return average
-   # percent = 200.0 /average * 100.0
-    #return percent
-
+        return avg
 
 def lightLevel():
+        global count        
+        count = 0
+        average = 0
+        j = 0
 
-    first = average()
-    if ( average() < first - 7  ): #theres little light in the room 
-        return 'Low'
-    else:           #there is enough light in a room
-        return 'High'
+        for j in range(100):
+	        new = photoresistorReading()
+	        average = runningSum(average,new)
+        
+        percent = 200.0 /average * 100.0
+
+
+        #print percent
+        if percent < 570: #theres little light in the room 
+                return 'Low'
+        else:           #there is enough light in a room
+                return 'High'
 

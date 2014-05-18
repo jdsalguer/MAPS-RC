@@ -1,96 +1,54 @@
 import time
-import RPi.GPIO as gpio
-
-ledEnable = 1
-ledDisable = 0
-rgbEnable = 1
-rgbDisable = 0
+import RPi.GPIO as GPIO
 
 rgbred=0
 rgbgreen=0
 rgbblue=0
 ledredl=0
 ledredr=0
-LED = []
-RGB = []
-RED = []
-GREEN = []
-BLUE = []
-CYAN = []
-MAGENTA = []
-YELLOW = []
-WHITE = []
-
-
-gpio.setmode(gpio.BOARD)
-
-
+GPIO.setmode(GPIO.BOARD)
 def ledSetup(r, g, b, rl, rr):
 	global rgbred
 	global rgbgreen
 	global rgbblue
 	global ledredl
 	global ledredr
-	global LED
-	global RGB
-	global RED
-	global GREEN
-	global BLUE
-	global CYAN
-	global MAGENTA
-	global YELLOW
-	global WHITE
-	
-
 	rgbred = r
 	rgbgreen = b 
 	rgbblue = g
-    	ledredl = rl
+	ledredl = rl
 	ledredr = rr
 
-	#GROUP THE LED PINS
-	LED = [ledredl, ledredr]
-	RGB = [rgbred, rgbgreen, rgbblue]
+	GPIO.setup(rgbred, GPIO.OUT)
+	GPIO.setup(rgbblue, GPIO.OUT)
+	GPIO.setup(rgbgreen, GPIO.OUT)
+	GPIO.setup(ledredl, GPIO.OUT)
+	GPIO.setup(ledredr, GPIO.OUT)
 
-	#RGB COLORS
-	RED = [rgbred]
-	GREEN = [rgbgreen]
-	BLUE = [rgbblue]
-	CYAN = [rgbblue, rgbgreen]
-	MAGENTA = [rgbblue, rgbred]
-	YELLOW = [rgbgreen, rgbred]
-	WHITE = [rgbred, rgbblue, rgbgreen]
+def blueON():
+	GPIO.output(rgbblue, 1)
+def greenON():
+	GPIO.output(rgbgreen, 1)
+def redON():
+	GPIO.output(rgbred, 1)
+def brakesON():
+	GPIO.output(ledredr, 1)
+	GPIO.output(ledredl, 1)
+def whiteON():
+	blueON()
+	greenON()
+	redON()
 
-	#print rgbred, rgbgreen, rgbblue, ledredl, ledredr
-	#print LED
-	#SETS UP EACH LED PIN FOR OUTPUT
-	for i in LED:
-		gpio.setup(i, gpio.OUT)
-	for i in RGB:
-		gpio.setup(i, gpio.OUT)
-
-
-def ledActivate(led):
-    	#TURNS ON THE LED COLOR OF CHOICE
-   	gpio.output(led, ledEnable)
-
-def rgbActivate(color):
-    	#ACTIVATES THE COLOR  FOR THE RGB
-	for i in color:
-		gpio.output(i, rgbEnable)
-
-def ledDeactivate(led):
-	gpio.output(led, ledDisable)
-
-def rgbDeactivate(color):
-   	for i in color:
-   		gpio.output(i, rgbDisable)
-
-def ledClear():
-  	# print 'clearing..'
-	for j in LED:
-		gpio.output(j, ledDisable)
-	for j in RGB:
-		gpio.output(j, rgbDisable)
-
-
+def blueOFF():
+	GPIO.output(rgbblue, 0)
+def greenOFF():
+	GPIO.output(rgbgreen, 0)
+def redOFF():
+	GPIO.output(rgbred, 0)
+def brakesOFF():
+	GPIO.output(ledredr, 0)
+	GPIO.output(ledredl, 0)
+def whiteOFF():
+	blueOFF()
+	greenOFF()
+	redOFF()

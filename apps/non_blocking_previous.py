@@ -19,7 +19,6 @@ import ledManagement as lM
 import ultrasonicSensor as uS
 import temperatureSensor as tS
 import RPi.GPIO as GPIO
-import mapbutton as mb
 
 '''print override for streamIO'''
 instream = [sys.stdin]
@@ -123,7 +122,7 @@ def mturnleft():
   global cur_dir
   cur_dir = "FL"
   dir_cycle = cycle_life
-  #jprint("####################"," LEFT ")
+  #jprint("####################"," FRONT ")
   mC.turnLeft()
 
 def mturnright():
@@ -131,24 +130,8 @@ def mturnright():
   global cur_dir
   cur_dir = "FR"
   dir_cycle = cycle_life
-  #jprint("####################","RIGHT")
+  #jprint("####################","BACK")
   mC.turnRight()
-
-def mbackright():
-  global dir_cycle
-  global cur_dir
-  cur_dir = "BR"
-  dir_cycle = cycle_life
-  #jprint("####################","BACKRIGHT")
-  mC.reverseRight()
-
-def mbackleft():
-  global dir_cycle
-  global cur_dir
-  cur_dir = "BL"
-  dir_cycle = cycle_life
-  #jprint("####################","BACKLEFT")
-  mC.reverseLeft()
 
 global motor_keyword
 motor_keyword = {}
@@ -176,40 +159,8 @@ def get_photo():
       jprint("photo", new_light )
       last_light = new_light
 
-      #'''if light is low turn light on'''
-     # if new_light == 'Low':
-     #   lM.whiteON()
-     # '''if light is high turn light off'''
-     # if new_light == 'High':
-     #   lM.whiteOFF()
-
 
 photo_thread = threading.Thread(target=get_photo)
-
-#####################################
-# LONG POLL THREAD FOR flashing lights
-def flashgreen():
-  global die
-  while 1:
-    if(die == 1):
-      break
-    time.sleep(timeout) 
-    for i in range(5):
-      lM.blueON()
-      time.sleep(.1)
-      lM.blueOFF()
-      time.sleep(.1)
-
-lifealert_thread = threading.Thread(target=flashgreen)
-
-#####################################
-# LONG POLL THREAD FOR mapping
-#def mapplace():
- # mb.Map()
-
-#mapper_thread = threading.Thread(target=mapplace)
-
-
 
 # this is where input should be taken and inturperated into the 
 # global commands that tell the robot what to do
@@ -231,77 +182,54 @@ def handler(s):
 
 
   if( s == "S" ):
-    lM.brakesON()
     mstop()
   elif( s == "F" ):
     jprint("__DIR__","forward")
-    lM.brakesOFF()
     mforward()
-  elif( s == "B" ):
-    lM.brakesOFF()      
+  elif( s == "B" ):      
     mbackward()
   elif( s == "FR" ):
-    lM.brakesOFF()
     mturnright()
   elif( s == "FL" ):
-    lM.brakesOFF()
     mturnleft()
-  elif( s == "BR" ):
-    lM.brakesOFF()
-    mbackright()
-  elif( s == "BL" ):
-    lM.brakesOFF()
-    mbackleft()
 
-  if( s == "light_on" ):
-    lM.whiteON()
-  if( s == "light_off" ):
-    lM.whiteOFF()
-  if( s == "map_area" ):
-    #mapper_thread.start()
-    mb.Map() 
-  #####################################
-  #LED button testing
-  #####################################
   if( s == "red-light_1" ):
-    lM.redON()
+    lM.rgbActivate(lM.RED)
     jprint("leds-group",s)
   elif( s == "green-light_1" ):
-    lM.greenON()
+    lM.rgbActivate(lM.GREEN)
     jprint("leds-group",s)
   elif( s == "blue-light_1" ):  
-    lM.blueON()
+    lM.rgbActivate(lM.BLUE)
     jprint("leds-group",s)
-  if( s == "brake-light_1" ):
-    lM.brakesON()
+  elif( s == "brake-light_1" ):
+    lM.ledActivate(lM.rearl)
+    lM.ledActivate(lM.rearr)
     jprint("leds-group",s)
-  if( s == "white-light_1" ):
-    #lM.whiteON()
-    #lifealert_thread.start()
+  elif( s == "white-light_1" ):
+    lM.rgbActivate(lM.WHITE)
     jprint("leds-group",s)
 
-  if( s == "red-light_0" ):
-    lM.redOFF()
+  elif( s == "red-light_0" ):
+    lM.rgbDeactivate(lM.RED)
     jprint("leds-group",s)
   elif( s == "green-light_0" ):
-    lM.greenOFF()
+    lM.rgbDeactivate(lM.GREEN)
     jprint("leds-group",s)
   elif( s == "blue-light_0" ):  
-    lM.blueOFF()
+    lM.rgbDeactivate(lM.BLUE)
     jprint("leds-group",s)
-  if( s == "brake-light_0" ):
-    lM.brakesOFF()
+  elif( s == "brake-light_0" ):
+    lM.ledDeactivate(lM.rearl)
+    lM.ledDeactivate(lM.rearr)
     jprint("leds-group",s)
-  if( s == "white-light_0" ):
-    #lM.whiteOFF()
+  elif( s == "white-light_0" ):
+    lM.rgbDeactivate(lM.WHITE)
     jprint("leds-group",s)
- 
-
 
   last_s = s
 
   last_interrupt = time.time()
-
 
 global last_life
 last_life = 0
@@ -337,13 +265,6 @@ def MAIN_LOOP():
     if( last_life != new_life ):
       jprint("life", new_life)
       last_life = new_life
-
-
-    #if motion detected flash green and get distance
-    if ( not mS.PIRReading()):
-     living = "Found " + str(uS.distance()) + "away"
-     jprint("life", living) 
-     lifealert_thread.start()
 
     ######################
     last_interrupt = now
@@ -381,8 +302,6 @@ input_thread.start()
 ################################
 # start other threads
 photo_thread.start()
-
-
 
 try:
   while True:

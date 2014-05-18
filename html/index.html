@@ -9,16 +9,108 @@
 <script>
 //	var   dirX 
 //		, dirY
-var killUpdate = false
+	var killUpdate = false
+	var socket = io.connect() 
+	var process_active = false
+	var lock_out = false
+	var skip_cycle = 100
+	//SOCKET.IO EVENTS
+	socket.on('echo', function(res) {
+		toTerminal(res)
+	})
+	socket.on( 'state_change', function(state) {
+		if(state == 'LOCKED') mode_elevate()
+		if(state == 'UNLOCK') mode_normal()
+	})
+	socket.on('execState', function(proc) {
+		$('div#info').empty()
+		var obj = JSON.parse(JSON.stringify(proc))
+		for(var i in obj) {
+			addToInfo(i,obj[i])
+		}
+	})
+
+// START DOM EVENTS
 $(document).ready(function(){
+
+		//addToInfo('temp','6565');
+
+		$('#goForward').click(function(){
+			sendToProc("F")
+		})
+
+		$('#lighton').click(function(){
+			sendToProc("light_on")
+		})
+		$('#lightoff').click(function(){
+			sendToProc("light_off")
+		})
+		$('#map').click(function(){
+			sendToProc("map_area")
+		})
+
+		$('.leds-group button').click(function(){
+			var this_t = $(this).attr("toggle")==0?1:0
+			var cmd = $(this).attr("id") + "_" + this_t
+			$(this).attr("toggle", this_t)
+
+			sendToProc( cmd );
+			$('#sent').html( cmd )
+		})
+
+		$('a#pulse').click( function() {
+			if(lock_out) return
+			var val = $(this).attr("value")
+			sendPulse( val )
+			toTerminalBold( val )
+		})
+		
+		$('.btn#kill').click( function() {
+			endProc();
+		})
+		
+		$('a#proc').click( function() {
+			if(lock_out) return
+			var name = $(this).attr("value")
+			startProc(name)
+			toTerminalBold('STARTING: ' + name )
+		})
+
+		$('.remote-power-toggle').click( function() {
+			obj = {}
+			obj['type'] = $(this).attr('type')
+			obj['name'] = $(this).attr('name')
+			obj['args'] = $(this).attr('args')
+			//toTerminalBold('runing script: ' + JSON.stringify(obj) )
+			startScript(obj)
+		})
+
+		$('#stdin').keyup(function(e) {
+		    if (e.keyCode == 13) {
+		       	var stdin = document.getElementById('stdin')
+		       	var val = stdin.value
+				toTerminalBold( val )
+
+		       	if(lock_out == true) 
+		       		sendToProc( val )
+		       	else
+					sendPulse( val )
+				stdin.value = ""
+		    }
+		})
+
 	$('.remote-power-toggle#on').hide()
 	$('.remote-power-toggle').click(function(){
 		$(this).hide().siblings().show()
 
-		if($(this).attr('id')=="off") 
+		if($(this).attr('id')=="off"){
 			$('#movement').draggable( {disabled: false} );
-		else
+		}
+		else {
+			//sendToProc("die")
+			endProc()
 			$('#movement').draggable( {disabled: true} );
+		}
 		
 	})
 	var y_off = 150, x_off = 150
@@ -31,7 +123,7 @@ $(document).ready(function(){
 		$('#media-type').text('Tablet')
 		var movement = new webkit_draggable('movement',{scroll:false,revert:true,
 			onStart: function(){
-		},
+			},
 			onEnd: function(){
 				killUpdate = true
 			}
@@ -52,12 +144,20 @@ $(document).ready(function(){
 	else
 	// FOR PC
 	{
+
 		$('#media-type').text('Desktop')
 		$( "#movement" ).draggable({ containment: "parent", grid: [130,120], disabled:true,helper:"clone",
 			start: function(ev,ui) {
 			$(this).hide()
 		},
 			drag: function(ev,ui){
+			//if( skip_cycle > 0) {
+			//	skip_cycle--
+			//	$('sent').html( skip_cycle )
+			//	return
+			//} 
+			//else
+			//	skip_cycle = 10
 			var x = -1 * (mleft - ui.offset.left )
 			var y = (mtop - ui.offset.top )
 	      	sendDirection(findDirection(x,y))
@@ -67,6 +167,7 @@ $(document).ready(function(){
 			return true
 		},
 			stop: function(){
+
 				$(this).show()
 			}
 		});
@@ -76,11 +177,102 @@ $(document).ready(function(){
 	}
 
 })
+// END DOM EVENTS
 
-function findDirection(x,y) {
+	//FUNCTION DEFS
+	function mode_normal() {
+		$('div#echo').removeClass('elevated')
+		$('a#kill').addClass('disabled')
+		$('a#proc,a#script').removeClass('disabled')
 
-	return x + ',' + y
-}
+		//$('.remote-power-toggle').hide().siblings().show()
+		process_active = 0;		
+		lock_out = false
+	}
+	function mode_elevate() {
+		$('div#echo').addClass('elevated')
+		$('a#kill').removeClass('disabled')
+		$('a#proc,a#script').addClass('disabled')	
+
+		process_active = 1;	
+		lock_out = true
+	}
+	function toTerminalBold(s) {
+		toTerminal('\n<strong>user@node: ' + s + '</strong>' )
+	}
+	function toTerminal(s) {
+		$('#echo').append(s+"\n")
+		term = document.getElementById('echo')
+		term.scrollTop = term.scrollHeight
+	}
+	function sendPulse(s) {
+		socket.emit('pulse', { "msg": s })
+	}
+	var lock_time = 1
+	function sendToProc(s) {
+		if( !process_active ) return
+
+		//setTimeout( com_lock, 300 )
+
+		//if(lock_time)
+		socket.emit('toProc', { "command": s } )		
+		
+		//lock_time = 0
+	}
+	function com_lock() {
+		lock_time = 1
+	}
+	function startProc(s) {
+		if (process_active) return;
+		socket.emit('proc_start', { "proc_name": s } )
+	}
+	function startScript(obj) {
+		socket.emit('script_start', obj )
+	}
+	function endProc() {
+		socket.emit('proc_end', { "kill":"this"} )
+	}
+	function addToInfo(name,val) {
+		name = name.replace(" ","")
+
+		$('#status').html( name + ' ' + val )
+		if( name.indexOf("temp") >= 0 ) {
+			$('#'+name+' .data').html((val * (9.0/5.0) + 32).toFixed(2) + '&deg;F (' + val+'&deg;C)' )
+			val = val.replace(" ","")
+			$('#send').html(val+'%')
+
+			$('.progress .progress-bar').css({"width":Math.floor(val)+"%"}) 
+		}
+		if( name.indexOf("obstruction") >= 0 ) {
+			$('#'+name+' .data').html((val / 100).toFixed(2) +'m (' + Math.round(val)+'cm)')
+		}
+		if( name.indexOf("photo") >= 0 ) {
+			$('#'+name+' .data').html( val )
+		}
+		if( name.indexOf("leds-group") >= 0 ) {
+			name = name.replace( /\_[0-9]/g ,"")
+			$('#'+name).addClass("active-light")
+			//alert(name)
+		}
+		if( name.indexOf("life") >= 0 ) {
+			$('#'+name+' .data').html( val?"True":"False" )
+		}
+	}
+	function findDirection(x,y) {
+		var coords = {}
+		coords["0,120"] = "F"
+		coords["-130,120"] = "FR"
+		coords["130,120"] = "FL"
+		coords["0,0"] = "S"
+		coords["0,-120"] = "B"
+		coords["-130,-120"] = "BL"
+		coords["130,-120"] = "BR"
+
+		$('#sent').html( coords[x+","+y] )
+		sendToProc(coords[x+","+y])
+		$('#sent').html( x+","+y )
+	}
+
 
 
 </script>
@@ -90,49 +282,65 @@ function findDirection(x,y) {
 <nav class="navbar navbar-default" role="navigation">
 	<div class="container-fluid">
 	<ul class="nav navbar-nav">
-	<li>	<a class="navbar-brand" href="#">RES</a>  </li>	
+	<li>  <a class="navbar-brand" href="#" >RES</a>  </li>	
 	<li id="media-type" class="navbar-brand  navbar-right"> </li> 
 	</ul>
+	<div class="pull-right nav" >
+		<a class="navbar-brand" href="#" id="status"></a>
+		<a class="navbar-brand" href="#" id="sent"></a>
+	</div>
 	</div>
 </nav>
+
 
 <section id="information">
 <div class="col-sm-5" id="information">
 
-	<div class="info-group">
+	<div class="info-group" id="temp">
 		<div class="container info-panel">
 			<div class="col-sm-12 info-title">
 				<strong>Temperature</strong>
 			</div>
 			<div class="col-sm-12">
 				<div class="progress">
-				  <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100" style="width: 40%"></div>
+				  <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0"></div>
 				</div>
 			</div>
 			<div class="col-sm-12 info-body">
-				<div class="data">180&deg;c</div>
+				<div class="data"></div>
 			</div>
 		</div>
 	</div>
 
-	<div class="info-group info-half">
+	<div class="info-group info-half" id="photo">
 		<div class="container info-panel">
 			<div class="col-sm-12 info-title">
 				<strong>Visibility</strong>
 			</div>
 			<div class="col-sm-12 info-body">
-				<div class="data">Great</div>
+				<div class="data"></div>
 			</div>
 		</div>
 	</div>
 
-	<div class="info-group info-half">
+	<div class="info-group info-half" id="obstruction">
 		<div class="container info-panel">
 			<div class="col-sm-12 info-title">
-				<strong>Other</strong>
+				<strong>Obstruction</strong>
 			</div>
 			<div class="col-sm-12 info-body">
-				<div class="data">thing</div>
+				<div class="data"></div>
+			</div>
+		</div>
+	</div>
+
+	<div class="info-group" id="life">
+		<div class="container info-panel">
+			<div class="col-sm-12 info-title">
+				<strong>Life</strong>
+			</div>
+			<div class="col-sm-12 info-body">
+				<div class="data"></div>
 			</div>
 		</div>
 	</div>
@@ -144,15 +352,36 @@ function findDirection(x,y) {
 <div class="col-sm-7" id="remote-control">
 
 	<div class="remote-group">
+		<!-- POWER BUTTONS -->
 		<div class="col-sm-2">
-
-			<div class="remote-power-toggle" id="off">
+			<font color="white">Program Power Button</font>
+			<p></p><p></p>
+			<div class="remote-power-toggle" id="off" control="script" type="python3" name="non_blocking.py" args="" >
 				<img style="height:100px" class="" src="../offbutton.png" id="off">
 			</div>
 			<div class="remote-power-toggle" id="on">
 				<img style="height:100px" class="" src="../onbutton.png" id="on">
 			</div>
+			<div class="button-group leds-group">
+			<!--<button class="btn btn-danger" toggle="0" id="red-light">R</button>
+				<button class="btn btn-success" toggle="0" id="green-light">G</button>
+				<button class="btn btn-info" toggle="0" id="blue-light">B</button>
+				<button class="btn btn-default" toggle="0" id="brake-light">BRAKE</button>
+				<button class="btn btn-default" toggle="0" id="white-light">WHITE</button>
+				<a class="btn btn-default" id="goForward">F</a> 
+				-->	
+			</div>
+			<div class="button-group">
+				<font color="white">LIFE DETECTION</font>
+			     <button class="btn btn-warning" id="map">MAP AREA NOW</button>
+			     <p></p><p></p>
+			     <p><font color="white">HEADLIGHT<br>(Manual Control)</font></p>
+			     <button type="button" class="btn btn-success" id="lighton">ON</button>
+			     <button type="button" class="btn btn-danger" id="lightoff">OFF</button>
+			</div>
 		</div>
+
+		<!-- END POWER BUTTONS -->
 		<div class="col-sm-2" id="dir-text">
 
 		</div>
